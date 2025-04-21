@@ -21,6 +21,7 @@ TABLE_NAME="my-table"
 COLUMN_FAMILY="cf1"
 
 # --- Dynamic Variables ---
+echo "${BLUE_TEXT}Fetching Project ID...${RESET_FORMAT}"
 PROJECT_ID=$(gcloud config get-value project 2>/dev/null)
 # Check if Project ID was found
 if [[ -z "$PROJECT_ID" ]]; then
@@ -56,11 +57,17 @@ echo "${GREEN_TEXT}Using Project:${RESET_FORMAT} ${WHITE_TEXT}${PROJECT_ID}${RES
 echo
 
 # === Task 1: Create Bigtable instance ===
+echo "${CYAN_TEXT}Task 1: Creating Bigtable instance '${INSTANCE_ID}'...${RESET_FORMAT}"
 gcloud bigtable instances create ${INSTANCE_ID} --project=${PROJECT_ID} \
         --display-name="${INSTANCE_ID}" \
         --cluster-config="id=${CLUSTER_ID},zone=${ZONE}" \
         --cluster-storage-type=${STORAGE_TYPE}
 
+echo "${GREEN_TEXT}Instance creation command submitted. Provisioning takes several minutes.${RESET_FORMAT}"
+echo "${YELLOW_TEXT}-> IMPORTANT: Wait for instance '${INSTANCE_ID}' to show as 'Ready' in the Cloud Console before proceeding.${RESET_FORMAT}"
+echo "${BLUE_TEXT}Pausing for 90 seconds...${RESET_FORMAT}"
+sleep 90 # Basic wait time - Adjust if needed or monitor console
+echo
 
 # === Task 2: Connect to your instance (Configure cbt) ===
 echo "${CYAN_TEXT}Task 2: Configuring cbt...${RESET_FORMAT}"
@@ -70,27 +77,33 @@ echo "${GREEN_TEXT}~/.cbtrc configured.${RESET_FORMAT}"
 echo
 
 # === Task 3: Read and write data ===
+echo "${CYAN_TEXT}Task 3: Working with table '${TABLE_NAME}'...${RESET_FORMAT}"
 
 # Attempt to delete table first in case of prior partial run (optional)
+echo "${BLUE_TEXT}Attempting to delete table '${TABLE_NAME}' if it exists (ignore errors if not found)...${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" deletetable ${TABLE_NAME} || true # Suppress errors if table doesn't exist
 
+echo "${BLUE_TEXT}Creating table '${TABLE_NAME}'...${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" createtable ${TABLE_NAME}
 
+echo "${BLUE_TEXT}Listing tables:${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" ls
 
+echo "${BLUE_TEXT}Creating column family '${COLUMN_FAMILY}'...${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" createfamily ${TABLE_NAME} ${COLUMN_FAMILY}
 
+echo "${BLUE_TEXT}Listing column families:${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" ls ${TABLE_NAME}
 
+echo "${BLUE_TEXT}Writing data to '${TABLE_NAME}'...${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" set ${TABLE_NAME} r1 ${COLUMN_FAMILY}:c1="test-value"
 
+echo "${BLUE_TEXT}Reading data from '${TABLE_NAME}':${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" read ${TABLE_NAME}
 
+echo "${BLUE_TEXT}Deleting table '${TABLE_NAME}'...${RESET_FORMAT}"
 cbt -project "${PROJECT_ID}" -instance "${INSTANCE_ID}" deletetable ${TABLE_NAME}
 
 echo "${GREEN_TEXT}Table operations completed.${RESET_FORMAT}"
 
 set +e 
-
-echo
-echo "${RED_TEXT}${BOLD_TEXT}Subscribe my Channel (Arcade Crew):${RESET_FORMAT} ${BLUE_TEXT}${BOLD_TEXT}https://www.youtube.com/@Arcade61432${RESET_FORMAT}"
